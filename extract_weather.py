@@ -3,6 +3,7 @@ import json
 from datetime import datetime
 import os
 from dotenv import load_dotenv
+import sqlite3
 
 load_dotenv()
 
@@ -25,14 +26,81 @@ def get_weather(city):
     else:
         print(f"Error fetching data for {city}: {response.status_code}")
         return None
+    
+def transform_weather_data(data):
+    
+    # getting useful basic weather data and putting into a dictionary
+
+    transformed_data = {
+        'city': data['name'],
+        'temperature': data['main']['temp'],
+        'feels_like': data['main']['feels_like'],
+        'humidity': data['main']['humidity'],
+        'weather_main': data['weather'][0]['main'],
+        'weather_description': data['weather'][0]['description'],
+        'wind_speed': data['wind']['speed'],
+        'visibility': data.get('visibility', None),
+    }
+
+    return transformed_data
+
+def init_database():
+    conn = sqlite3.connect('weather_data.db')
+    cursor = conn.cursor()
+    
+    with open('db_schema.sql', 'r') as f:
+        cursor.executescript(f.read())
+    
+    conn.commit()
+    conn.close()
+    print("Database initialized.")
+
+def load_to_database(data):
+    conn = sqlite3.connect('weather_data.db')
+    cursor = conn.cursor()
+    
+
+    for record in data:
+        cursor.execute('''
+            INSERT INTO weather_data (city, temperature, feels_like, humidity, weather_main, weather_description, visibility, wind_speed)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            data['city'],
+            data['temperature'],
+            data['feels_like'],
+            data['humidity'],
+            data['weather_main'],
+            data['weather_description'],
+            data['visibility'],
+            data['wind_speed'],
+        ))
+    
+    conn.commit()
+    conn.close()
+    print("Loaded data into database.")
 
 def main():
-    print("Getting weaither at {datetime.now()}")
+    print(f"Getting weather at {datetime.now()}")
+
+    init_database()
 
     for city in cities:
         weather_data = get_weather(city)
-        if weather_data:
-            print(f"City: {city}: {weather_data['weather'][0]['description']}, Temperature: {weather_data['main']['temp']}°F")
+
+        transformed_data = transform_weather_data(weather_data)  
+
+        '''
+        if transformed_data:
+            print(f"City: {city}: {transformed_data['weather_description']}, Temperature: {transformed_data['temperature']}°F")
+        '''
+            
+    load_to_database(transformed_data)
+
+    # exploring keys in the weather data
+    #print(weather_data.keys())
+    #print(weather_data['main'])
+    #print(weather_data['weather'])
+    #print(weather_data['visibility'])
 
 if __name__ == "__main__":
     main()
