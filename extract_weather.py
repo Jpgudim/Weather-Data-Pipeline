@@ -27,12 +27,12 @@ def get_weather(city):
         print(f"Error fetching data for {city}: {response.status_code}")
         return None
     
-def transform_weather_data(data):
+def transform_weather_data(data, city):
     
     # getting useful basic weather data and putting into a dictionary
 
     transformed_data = {
-        'city': data['name'],
+        'city': city,
         'temperature': data['main']['temp'],
         'feels_like': data['main']['feels_like'],
         'humidity': data['main']['humidity'],
@@ -87,14 +87,9 @@ def main():
     for city in cities:
         weather_data = get_weather(city)
 
-        transformed_data = transform_weather_data(weather_data)  
-
-        '''
-        if transformed_data:
-            print(f"City: {city}: {transformed_data['weather_description']}, Temperature: {transformed_data['temperature']}°F")
-        '''
+        transformed_data = transform_weather_data(weather_data, city)
             
-    load_to_database(transformed_data)
+        load_to_database(transformed_data)
 
     # exploring keys in the weather data
     #print(weather_data.keys())
