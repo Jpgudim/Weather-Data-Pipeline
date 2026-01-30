@@ -17,5 +17,13 @@ SELECT
     FROM weather_data;
 """
 
+
+query2 = """
+-- show weather for each city
+SELECT
+    *
+    FROM weather_data;
+"""
+
 if __name__ == "__main__":
-    run_query(query1)
+    run_query(query2)
